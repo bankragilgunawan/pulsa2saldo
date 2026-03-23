@@ -24,6 +24,10 @@ jobs:
         with:
           node-version: 20
 
+      # INI LANGKAH PENTING YANG TADI HILANG
+      - name: Install dependencies
+        run: npm install
+
       - name: Build
         run: npm run build
         env:
