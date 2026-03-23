@@ -4,7 +4,8 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
+// PERBAIKAN DI SINI: Nama foldernya harus generative-ai
+import { GoogleGenerativeAI } from "@google/generative-ai"; 
 import { 
   Send, 
   User, 
@@ -17,7 +18,7 @@ import {
   Info,
   ChevronRight
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion'; // Perbaikan nama motion
 import { Message, ConversionData } from './types';
 
 const WHATSAPP_NUMBER = "6282121218466";
@@ -38,23 +39,15 @@ export default function App() {
   const [conversionData, setConversionData] = useState<ConversionData>({});
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const aiRef = useRef<any>(null);
+  const genAIRef = useRef<any>(null); // Ganti nama ref agar lebih jelas
 
   useEffect(() => {
-    if (process.env.GEMINI_API_KEY) {
-      aiRef.current = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    // PERBAIKAN DI SINI: Cara panggil kunci API
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (apiKey) {
+      genAIRef.current = new GoogleGenerativeAI(apiKey);
     }
   }, []);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    if (activeTab === 'chat') {
-      scrollToBottom();
-    }
-  }, [messages, activeTab]);
 
   const extractDataWithAI = async (allMessages: Message[]) => {
     try {
