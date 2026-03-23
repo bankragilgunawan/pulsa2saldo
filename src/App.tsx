@@ -42,12 +42,12 @@ export default function App() {
   const genAIRef = useRef<any>(null); // Ganti nama ref agar lebih jelas
 
   useEffect(() => {
-    // PERBAIKAN DI SINI: Cara panggil kunci API
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (apiKey) {
-      genAIRef.current = new GoogleGenerativeAI(apiKey);
-    }
-  }, []);
+  const apiKey = "AIzaSyAgNBwE16qP-4SDUhHWz3MPEXCUlxXvMzU"; // Pastikan tidak ada spasi
+  if (apiKey) {
+    genAIRef.current = new GoogleGenerativeAI(apiKey);
+  }
+}, []);
+
 
       const extractDataWithAI = async (allMessages: Message[]) => {
     try {
