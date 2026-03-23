@@ -41,9 +41,10 @@ export default function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const genAIRef = useRef<any>(null); // Ganti nama ref agar lebih jelas
 
-  useEffect(() => {
-    // PERBAIKAN DI SINI: Cara panggil kunci API
-    const apiKey = process.env.GEMINI_API_KEY;
+    useEffect(() => {
+    // Masukkan API Key asli kamu di antara tanda kutip di bawah ini
+    const apiKey = "AIzaSyBci1WRxZXetgQC4dE5z-G_1Q5Dc1AZcog"; 
+    
     if (apiKey) {
       genAIRef.current = new GoogleGenerativeAI(apiKey);
     }
