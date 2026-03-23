@@ -9,6 +9,7 @@ export default defineConfig(({mode}) => {
     base: '/pulsa2saldo/',
     plugins: [react(), tailwindcss()],
     define: {
+      // Kita panggil VITE_GEMINI_API_KEY dari sistem
       'process.env.GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
     },
     resolve: {
@@ -18,4 +19,3 @@ export default defineConfig(({mode}) => {
     },
   };
 });
-
