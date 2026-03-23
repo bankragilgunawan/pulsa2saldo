@@ -1,0 +1,5 @@
+{
+  "name": "Pulsa2Saldo Chatbot",
+  "description": "Chatbot untuk tukar pulsa menjadi saldo e-wallet atau transfer bank dengan rate terbaik.",
+  "requestFramePermissions": []
+}
