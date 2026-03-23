@@ -27,12 +27,12 @@ jobs:
       # INI LANGKAH PENTING YANG TADI HILANG
       - name: Install dependencies
         run: npm install
-
-            - name: Build
+        
+      - name: Build
         run: npm run build
         env:
           VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
-
+     
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
