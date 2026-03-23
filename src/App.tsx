@@ -41,10 +41,9 @@ export default function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const genAIRef = useRef<any>(null); // Ganti nama ref agar lebih jelas
 
-    useEffect(() => {
-    // Masukkan API Key asli kamu di antara tanda kutip di bawah ini
-    const apiKey = "AIzaSyBci1WRxZXetgQC4dE5z-G_1Q5Dc1AZcog"; 
-    
+  useEffect(() => {
+    // PERBAIKAN DI SINI: Cara panggil kunci API
+    const apiKey = process.env.GEMINI_API_KEY;
     if (apiKey) {
       genAIRef.current = new GoogleGenerativeAI(apiKey);
     }
@@ -84,7 +83,7 @@ export default function App() {
     }
   };
 
-    const handleSend = async () => {
+      const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMsg: Message = {
@@ -94,62 +93,40 @@ export default function App() {
       timestamp: new Date()
     };
 
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
 
     try {
-      // PERBAIKAN: Gunakan genAIRef yang sudah kita buat di atas
-      if (!genAIRef.current) throw new Error("AI not initialized");
+      if (!genAIRef.current) throw new Error("AI Belum Siap");
 
       const model = genAIRef.current.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        systemInstruction: `Anda adalah asisten chatbot "Pulsa2Saldo". 
-            Tugas Anda adalah membantu user menukar pulsa menjadi saldo e-wallet atau transfer bank.
-            
-            Informasi Penting:
-            - WhatsApp Admin: 082121218466
-            - Rate: 0.70 - 0.80 (Gunakan 0.75 sebagai estimasi jika user bertanya).
-            
-            Langkah-langkah yang harus Anda pastikan terkumpul:
-            1. Provider Pulsa (Telkomsel, XL, dll).
-            2. Nominal Pulsa.
-            3. Tujuan (E-wallet: DANA/OVO/GOPAY atau Bank: BCA/BNI/dll).
-            4. Nomor Rekening / Nomor HP E-wallet.
-            
-            Gaya bicara: Ramah, profesional, dan to-the-point. Gunakan Bahasa Indonesia.
-            Jika data sudah lengkap, katakan pada user bahwa data sudah siap dan mereka bisa mengklik tombol "Kirim ke WhatsApp" di tab Ringkasan.`
+        model: "gemini-1.5-flash" 
       });
 
-      // Jalankan Chat dan Ekstraksi Data sekaligus
-      const [result] = await Promise.all([
-        model.generateContent({
-          contents: newMessages.map(m => ({
-            role: m.role === 'user' ? 'user' : 'model',
-            parts: [{ text: m.text }]
-          }))
-        }),
-        extractDataWithAI(newMessages)
-      ]);
-      
+      // Kita kirim pesan terakhir saja dulu untuk tes koneksi
+      const result = await model.generateContent(input);
       const response = await result.response;
       const text = response.text();
 
       const modelMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'model',
-        text: text || "Maaf, saya tidak mengerti. Bisa diulangi?",
+        text: text || "Maaf, saya tidak mengerti.",
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, modelMsg]);
+      
+      // Jalankan ekstraksi data di belakang layar tanpa menunggu
+      extractDataWithAI([...messages, userMsg]);
+
     } catch (error) {
-      console.error("Chat Error:", error);
+      console.error("Detail Error:", error);
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         role: 'model',
-        text: "Maaf, asisten sedang tidak enak badan (masalah koneksi). Coba lagi nanti ya.",
+        text: "Koneksi gagal. Cek apakah API Key sudah aktif di Google AI Studio.",
         timestamp: new Date()
       }]);
     } finally {
