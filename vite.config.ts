@@ -10,7 +10,8 @@ export default defineConfig(({mode}) => {
     base: './pulsa2saldo/', 
     plugins: [react(), tailwindcss()],
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+          define: {
+      'process.env.GEMINI_API_KEY': JSON.stringify("AIzaSyBci1WRxZXetgQC4dE5z-G_1Q5Dc1AZcog"),
     },
     resolve: {
       alias: {
