@@ -7,7 +7,7 @@ export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
     // BARIS DI BAWAH INI SANGAT PENTING
-    base: '/pulsa2saldo/', 
+    base: './pulsa2saldo/', 
     plugins: [react(), tailwindcss()],
     define: {
       'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
