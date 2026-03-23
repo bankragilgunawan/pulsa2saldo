@@ -49,36 +49,25 @@ export default function App() {
     }
   }, []);
 
-  const extractDataWithAI = async (allMessages: Message[]) => {
+      const extractDataWithAI = async (allMessages: Message[]) => {
     try {
-      if (!aiRef.current) return;
+      if (!genAIRef.current) return;
       
-      const response = await aiRef.current.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: `Ekstrak data transaksi tukar pulsa dari riwayat chat berikut. 
-            Berikan hasil dalam format JSON murni dengan key: 
-            provider (string, contoh: "TELKOMSEL"), 
-            amount (number, contoh: 100000), 
-            targetType (string: "ewallet" atau "bank"), 
-            targetName (string, contoh: "DANA" atau "BCA"), 
-            accountNumber (string, contoh: "08123456789").
-            
-            Jika data tidak ditemukan, gunakan null. 
-            PENTING: Bedakan antara nominal pulsa (biasanya 5000-1000000) dan nomor HP (biasanya 10-13 digit dimulai 08 atau 62).
-            
-            Riwayat Chat:
-            ${allMessages.map(m => `${m.role}: ${m.text}`).join('\n')}` }]
-          }
-        ],
-        config: {
-          responseMimeType: "application/json",
-        }
+      const model = genAIRef.current.getGenerativeModel({ 
+        model: "gemini-1.5-flash"
       });
 
-      const rawText = response.text || "{}";
+      const prompt = `Ekstrak data transaksi tukar pulsa dari riwayat chat berikut. 
+            Berikan hasil dalam format JSON murni dengan key: 
+            provider, amount, targetType, targetName, accountNumber.
+            
+            Riwayat Chat:
+            ${allMessages.map(m => `${m.role}: ${m.text}`).join('\n')}`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      // Membersihkan teks dari markdown agar JSON.parse tidak error
+      const rawText = response.text().replace(/```json|```/g, "").trim();
       const data = JSON.parse(rawText);
       
       setConversionData(prev => ({
@@ -94,7 +83,7 @@ export default function App() {
     }
   };
 
-  const handleSend = async () => {
+    const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMsg: Message = {
@@ -110,17 +99,12 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      if (!aiRef.current) throw new Error("AI not initialized");
+      // PERBAIKAN: Gunakan genAIRef yang sudah kita buat di atas
+      if (!genAIRef.current) throw new Error("AI not initialized");
 
-      const [chatResponse] = await Promise.all([
-        aiRef.current.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: newMessages.map(m => ({
-            role: m.role,
-            parts: [{ text: m.text }]
-          })),
-          config: {
-            systemInstruction: `Anda adalah asisten chatbot "Pulsa2Saldo". 
+      const model = genAIRef.current.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        systemInstruction: `Anda adalah asisten chatbot "Pulsa2Saldo". 
             Tugas Anda adalah membantu user menukar pulsa menjadi saldo e-wallet atau transfer bank.
             
             Informasi Penting:
@@ -134,26 +118,37 @@ export default function App() {
             4. Nomor Rekening / Nomor HP E-wallet.
             
             Gaya bicara: Ramah, profesional, dan to-the-point. Gunakan Bahasa Indonesia.
-            Jika data sudah lengkap (Provider, Nominal, Tujuan, No Rek), katakan pada user bahwa data sudah siap dan mereka bisa mengklik tombol "Kirim ke WhatsApp" di tab Ringkasan.`
-          }
+            Jika data sudah lengkap, katakan pada user bahwa data sudah siap dan mereka bisa mengklik tombol "Kirim ke WhatsApp" di tab Ringkasan.`
+      });
+
+      // Jalankan Chat dan Ekstraksi Data sekaligus
+      const [result] = await Promise.all([
+        model.generateContent({
+          contents: newMessages.map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.text }]
+          }))
         }),
         extractDataWithAI(newMessages)
       ]);
+      
+      const response = await result.response;
+      const text = response.text();
 
       const modelMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'model',
-        text: chatResponse.text || "Maaf, saya tidak mengerti. Bisa diulangi?",
+        text: text || "Maaf, saya tidak mengerti. Bisa diulangi?",
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, modelMsg]);
     } catch (error) {
-      console.error(error);
+      console.error("Chat Error:", error);
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         role: 'model',
-        text: "Maaf, terjadi kesalahan koneksi. Silakan coba lagi.",
+        text: "Maaf, asisten sedang tidak enak badan (masalah koneksi). Coba lagi nanti ya.",
         timestamp: new Date()
       }]);
     } finally {
